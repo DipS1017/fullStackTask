@@ -46,31 +46,21 @@ var cookie_parser_1 = __importDefault(require("cookie-parser"));
 var authMiddleware_1 = require("./middleware/authMiddleware");
 var dotenv_1 = __importDefault(require("dotenv"));
 var errorHandler_1 = require("./middleware/errorHandler");
-var mongoose_1 = __importDefault(require("mongoose")); // Import mongoose for MongoDB
+var mongoose_1 = __importDefault(require("mongoose"));
 dotenv_1.default.config();
 var app = (0, express_1.default)();
+// Log the value of FRONTEND_URL before using it in cors
+console.log("Frontend URL:", process.env.FRONTEND_URL);
 app.use((0, cors_1.default)({
-    origin: function (origin, callback) {
-        var allowedOrigins = [process.env.FRONTEND_URL || ""];
-        if ((typeof origin === "string" && allowedOrigins.includes(origin)) ||
-            !origin) {
-            // Allow no origin (for requests like Postman)
-            callback(null, true); // Allow the request
-        }
-        else {
-            callback(new Error("Not allowed by CORS"), false); // Reject the request
-        }
-    }, // Allow your frontend domain
-    credentials: true, // Allow cookies to be sent
+    origin: process.env.FRONTEND_URL, // Make sure it's the correct URL
+    credentials: true, // Allow cookies and credentials
 }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.get("/admin", (0, authMiddleware_1.roleMiddleware)(authMiddleware_1.roles.ADMIN), function (req, res) {
     res.send("welcome");
 });
-app.get("/api/auth/me", (0, authMiddleware_1.roleMiddleware)("USER"), // Ensure the user has the "USER" role
-function (req, res) {
-    // Since we validated userId, it is now available
+app.get("/api/auth/me", (0, authMiddleware_1.roleMiddleware)("USER"), function (req, res) {
     var userId = req.userId;
     res.json({
         message: "Authenticated successfully",
@@ -96,20 +86,19 @@ var connectDB = function () { return __awaiter(void 0, void 0, void 0, function 
             case 2:
                 error_1 = _a.sent();
                 console.error("Error connecting to MongoDB:", error_1);
-                process.exit(1); // Exit the process with failure if connection fails
+                process.exit(1);
                 return [3 /*break*/, 3];
             case 3: return [2 /*return*/];
         }
     });
 }); };
-// Initialize the app and start the server after connecting to MongoDB
 var init = function () { return __awaiter(void 0, void 0, void 0, function () {
     var PORT;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, connectDB()];
             case 1:
-                _a.sent(); // Connect to MongoDB before starting the server
+                _a.sent();
                 PORT = process.env.NODESERVER_PORT || 5000;
                 app.listen(PORT, function () {
                     console.log("Server is running on port ".concat(PORT));

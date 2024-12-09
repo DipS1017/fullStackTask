@@ -13,7 +13,7 @@ export const roleMiddleware = (requiredRole: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.access_token; // Get access token from cookies
     if (!token) {
-      throw new UnauthorizedError("No access token found", "access_token");
+      throw new UnauthorizedError("Authentication required", "access_token");
     }
 
     try {

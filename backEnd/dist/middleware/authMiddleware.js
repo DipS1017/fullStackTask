@@ -16,7 +16,7 @@ var roleMiddleware = function (requiredRole) {
     return function (req, res, next) {
         var token = req.cookies.access_token; // Get access token from cookies
         if (!token) {
-            throw new customError_1.UnauthorizedError("No access token found", "access_token");
+            throw new customError_1.UnauthorizedError("Authentication required", "access_token");
         }
         try {
             // Verify the token
