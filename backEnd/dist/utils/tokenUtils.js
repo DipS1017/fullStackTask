@@ -8,7 +8,7 @@ var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 //access token generation
 var generateAccessToken = function (user) {
     return jsonwebtoken_1.default.sign({ user: user }, process.env.JWT_ACCESS_SECRET, {
-        expiresIn: "15m",
+        expiresIn: "1d",
     });
 };
 exports.generateAccessToken = generateAccessToken;

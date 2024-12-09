@@ -55,11 +55,11 @@ var checkEmailAvailability = function (req, res, next) { return __awaiter(void 0
                 return [4 /*yield*/, (0, userServices_1.checkEmail)(email)];
             case 2:
                 _a.sent(); // Check if email exists
-                res.status(200).json({ message: "Email is available" });
+                res.status(200).json({ isTaken: false });
                 return [3 /*break*/, 4];
             case 3:
                 error_1 = _a.sent();
-                next(error_1); // Pass the error to the error handling middleware
+                res.status(200).json({ isTaken: true });
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
         }
@@ -82,11 +82,11 @@ var checkUsernameAvailability = function (req, res, next) { return __awaiter(voi
                 return [4 /*yield*/, (0, userServices_1.checkUserName)(userName)];
             case 2:
                 _a.sent(); // Check if username exists
-                res.status(200).json({ message: "Username is available" });
+                res.status(200).json({ isTaken: false });
                 return [3 /*break*/, 4];
             case 3:
                 error_2 = _a.sent();
-                next(error_2);
+                res.status(200).json({ isTaken: true });
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
         }

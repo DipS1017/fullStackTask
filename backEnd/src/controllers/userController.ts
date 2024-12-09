@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { checkEmail, checkUserName } from "../services/userServices";
-import { ValidationError } from "../utils/customError";
+import { ValidationError, NotFoundError } from "../utils/customError";
+import {} from "../utils/customError";
 
 // Controller to check email availability
 export const checkEmailAvailability = async (
@@ -16,9 +17,9 @@ export const checkEmailAvailability = async (
 
   try {
     await checkEmail(email); // Check if email exists
-    res.status(200).json({ message: "Email is available" });
+    res.status(200).json({ isTaken: false });
   } catch (error) {
-    next(error); // Pass the error to the error handling middleware
+    res.status(200).json({ isTaken: true });
   }
 };
 
@@ -36,8 +37,8 @@ export const checkUsernameAvailability = async (
 
   try {
     await checkUserName(userName); // Check if username exists
-    res.status(200).json({ message: "Username is available" });
+    res.status(200).json({ isTaken: false });
   } catch (error) {
-    next(error);
+    res.status(200).json({ isTaken: true });
   }
 };

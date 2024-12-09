@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import "react-toastify/dist/ReactToastify.css";
 
 const Signup = () => {
@@ -12,6 +13,75 @@ const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [retryPassword, setRetryPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailTaken, setIsEmailTaken] = useState(false);
+  const [isUsernameTaken, setIsUsernameTaken] = useState(false);
+  const debounceTimeoutEmail = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutUsername = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    // Clear the previous timeout for email
+    if (debounceTimeoutEmail.current) {
+      clearTimeout(debounceTimeoutEmail.current);
+    }
+
+    // Set a new timeout for debouncing
+    debounceTimeoutEmail.current = setTimeout(() => {
+      checkEmailAvailability(value);
+    }, 500); // Adjust debounce delay as needed
+  };
+
+  const checkEmailAvailability = async (email: string) => {
+    if (!email) {
+      setIsEmailTaken(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/auth/checkEmail?email=${email}`,
+      );
+      setIsEmailTaken(response.data.isTaken);
+    } catch (error) {
+      console.error("Error checking email availability:", error);
+      setIsEmailTaken(false); // Assume not taken if error occurs
+    }
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserName(value);
+
+    // Clear the previous timeout for username
+    if (debounceTimeoutUsername.current) {
+      clearTimeout(debounceTimeoutUsername.current);
+    }
+
+    // Set a new timeout for debouncing
+    debounceTimeoutUsername.current = setTimeout(() => {
+      checkUsernameAvailability(value);
+    }, 500); // Adjust debounce delay as needed
+  };
+
+  const checkUsernameAvailability = async (userName: string) => {
+    if (!userName) {
+      setIsUsernameTaken(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/auth/checkUsername?userName=${userName}`,
+      );
+      setIsUsernameTaken(response.data.isTaken);
+    } catch (error) {
+      console.error("Error checking username availability:", error);
+      setIsUsernameTaken(false); // Assume not taken if error occurs
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +95,14 @@ const Signup = () => {
       toast.error("Passwords do not match.");
       return;
     }
+    if (isEmailTaken) {
+      toast.error("Email is already taken.");
+      return;
+    }
+    if (isUsernameTaken) {
+      toast.error("Username is already taken.");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -36,17 +114,16 @@ const Signup = () => {
       );
 
       if (response.status === 201) {
-        // Success
         toast.success(response.data.message || "Signup successful!");
-        // Optional: Redirect or clear the form
+        // Clear form fields after successful signup
         setEmail("");
         setUserName("");
         setFullName("");
         setPassword("");
         setRetryPassword("");
+        router.push("/login");
       }
     } catch (error: any) {
-      // Handle errors
       const errorMessage =
         error.response?.data?.errors?.[0]?.message ||
         error.response?.data?.message ||
@@ -56,6 +133,7 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="flex justify-center items-center min-h-screen p-6">
       <div className="w-full max-w-sm">
@@ -77,10 +155,51 @@ const Signup = () => {
               id="email"
               name="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               disabled={isLoading}
-              className="block w-full p-2 mb-4 border border-gray-300 rounded"
+              className="block w-full p-2 mb-1 border border-gray-300 rounded"
             />
+            {email && (
+              <p
+                className={`text-sm mt-1 ${
+                  isEmailTaken ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {isEmailTaken
+                  ? "This email is already taken."
+                  : "This email is available."}
+              </p>
+            )}
+          </div>
+
+          {/* Username Field */}
+          <div>
+            <label
+              htmlFor="userName"
+              className="block text-sm font-medium text-gray-900"
+            >
+              Username
+            </label>
+            <input
+              type="text"
+              id="userName"
+              name="userName"
+              value={userName}
+              onChange={handleUsernameChange}
+              disabled={isLoading}
+              className="block w-full p-2 mb-1 border border-gray-300 rounded"
+            />
+            {userName && (
+              <p
+                className={`text-sm mt-1 ${
+                  isUsernameTaken ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {isUsernameTaken
+                  ? "This username is already taken."
+                  : "This username is available."}
+              </p>
+            )}
           </div>
 
           {/* Full Name Field */}
@@ -97,25 +216,6 @@ const Signup = () => {
               name="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              disabled={isLoading}
-              className="block w-full p-2 mb-4 border border-gray-300 rounded"
-            />
-          </div>
-
-          {/* Username Field */}
-          <div>
-            <label
-              htmlFor="userName"
-              className="block text-sm font-medium text-gray-900"
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              id="userName"
-              name="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
               disabled={isLoading}
               className="block w-full p-2 mb-4 border border-gray-300 rounded"
             />
@@ -163,7 +263,7 @@ const Signup = () => {
           <div>
             <button
               type="submit"
-              className="w-full py-2 bg-blue-600  hover:bg-blue-800 text-white font-bold rounded disabled:bg-gray-400"
+              className="w-full py-2 bg-blue-600 hover:bg-blue-800 text-white font-bold rounded disabled:bg-gray-400"
               disabled={isLoading}
             >
               {isLoading ? "Signing up..." : "Sign up"}
