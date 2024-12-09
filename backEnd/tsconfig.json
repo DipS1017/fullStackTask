@@ -1,0 +1,25 @@
+
+{
+ 
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react",
+    "rootDir": "src",
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "tsBuildInfoFile": "tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
+  "ts-node": {
+    "swc": true
+  }
+}
+
