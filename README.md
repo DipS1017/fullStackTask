@@ -58,11 +58,6 @@ This project is a full-stack application with a frontend built using **React** a
 - The application uses **MongoDB** to store user data. The database contains user documents with details like email, username, and password.
 - The password is securely hashed before storage.
 
-### Image Upload Endpoint:
-- **POST /api/auth/upload-image**: Allows users to upload a profile image. This image is stored in the backend and associated with the user's profile.
-
----
-
 ## How to Run the Project
 
 ### Prerequisites:
