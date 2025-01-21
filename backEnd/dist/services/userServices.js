@@ -41,13 +41,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkUserName = exports.checkEmail = void 0;
 var customError_1 = require("../utils/customError");
-var User_1 = __importDefault(require("../models/User")); // Adjust the path to your Mongoose User model
+var prismaClient_1 = __importDefault(require("../db/prismaClient")); // Adjust the path to the Prisma client instance
 // Function to check if email already exists
 var checkEmail = function (email) { return __awaiter(void 0, void 0, void 0, function () {
     var existingUser;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, User_1.default.findOne({ email: email })];
+            case 0: return [4 /*yield*/, prismaClient_1.default.user.findUnique({
+                    where: { email: email },
+                })];
             case 1:
                 existingUser = _a.sent();
                 if (existingUser) {
@@ -63,7 +65,9 @@ var checkUserName = function (userName) { return __awaiter(void 0, void 0, void 
     var existingUser;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, User_1.default.findOne({ userName: userName })];
+            case 0: return [4 /*yield*/, prismaClient_1.default.user.findUnique({
+                    where: { userName: userName },
+                })];
             case 1:
                 existingUser = _a.sent();
                 if (existingUser) {

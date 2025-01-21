@@ -44,19 +44,24 @@ var bcrypt_1 = __importDefault(require("bcrypt"));
 var customError_1 = require("../utils/customError");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var tokenUtils_1 = require("../utils/tokenUtils");
-var User_1 = __importDefault(require("../models/User")); // Adjust the path to the User model
+var prismaClient_1 = __importDefault(require("../db/prismaClient")); // Import the Prisma client instance
+// Register a new user
 var registerUser = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
     var existingUserByEmail, existingUserByUsername, hashedPassword, user;
     var fullName = _b.fullName, userName = _b.userName, email = _b.email, password = _b.password, _c = _b.role, role = _c === void 0 ? "USER" : _c, _d = _b.isVerified, isVerified = _d === void 0 ? false : _d, _e = _b.isActive, isActive = _e === void 0 ? true : _e;
     return __generator(this, function (_f) {
         switch (_f.label) {
-            case 0: return [4 /*yield*/, User_1.default.findOne({ email: email })];
+            case 0: return [4 /*yield*/, prismaClient_1.default.user.findUnique({
+                    where: { email: email },
+                })];
             case 1:
                 existingUserByEmail = _f.sent();
                 if (existingUserByEmail) {
                     throw new customError_1.ValidationError("User with email already exists", "email");
                 }
-                return [4 /*yield*/, User_1.default.findOne({ userName: userName })];
+                return [4 /*yield*/, prismaClient_1.default.user.findUnique({
+                        where: { userName: userName },
+                    })];
             case 2:
                 existingUserByUsername = _f.sent();
                 if (existingUserByUsername) {
@@ -65,19 +70,21 @@ var registerUser = function (_a) { return __awaiter(void 0, [_a], void 0, functi
                 return [4 /*yield*/, bcrypt_1.default.hash(password, 10)];
             case 3:
                 hashedPassword = _f.sent();
-                return [4 /*yield*/, User_1.default.create({
-                        fullName: fullName,
-                        userName: userName,
-                        email: email,
-                        password: hashedPassword,
-                        role: role,
-                        isVerified: isVerified,
-                        isActive: isActive,
+                return [4 /*yield*/, prismaClient_1.default.user.create({
+                        data: {
+                            fullName: fullName,
+                            userName: userName,
+                            email: email,
+                            password: hashedPassword,
+                            role: role,
+                            isVerified: isVerified,
+                            isActive: isActive,
+                        },
                     })];
             case 4:
                 user = _f.sent();
                 return [2 /*return*/, {
-                        id: user._id,
+                        id: user.id, // Prisma-generated id (number)
                         fullName: user.fullName,
                         userName: user.userName,
                         email: user.email,
@@ -86,12 +93,15 @@ var registerUser = function (_a) { return __awaiter(void 0, [_a], void 0, functi
     });
 }); };
 exports.registerUser = registerUser;
+// Authenticate the user (login)
 var authenticateUser = function (emailOrUsername, password) { return __awaiter(void 0, void 0, void 0, function () {
     var user, isPasswordValid, accessToken, refreshToken;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, User_1.default.findOne({
-                    $or: [{ email: emailOrUsername }, { userName: emailOrUsername }],
+            case 0: return [4 /*yield*/, prismaClient_1.default.user.findFirst({
+                    where: {
+                        OR: [{ email: emailOrUsername }, { userName: emailOrUsername }],
+                    },
                 })];
             case 1:
                 user = _a.sent();
@@ -105,17 +115,17 @@ var authenticateUser = function (emailOrUsername, password) { return __awaiter(v
                     throw new customError_1.ValidationError("Invalid credentials");
                 }
                 accessToken = (0, tokenUtils_1.generateAccessToken)({
-                    id: user._id, // Convert ObjectId to string
+                    id: user.id, // Prisma-generated id (number)
                     email: user.email,
                     role: user.role,
                 });
                 refreshToken = (0, tokenUtils_1.generateRefreshToken)({
-                    id: user._id, // Convert ObjectId to string
+                    id: user.id, // Use the Prisma-generated user ID (number)
                     email: user.email,
                 });
                 return [2 /*return*/, {
                         user: {
-                            id: user._id,
+                            id: user.id, // Prisma-generated id (number)
                             fullName: user.fullName,
                             userName: user.userName,
                             email: user.email,
@@ -127,12 +137,13 @@ var authenticateUser = function (emailOrUsername, password) { return __awaiter(v
     });
 }); };
 exports.authenticateUser = authenticateUser;
+// Refresh access token using the refresh token
 var refreshAccessTokenLogic = function (refreshToken) { return __awaiter(void 0, void 0, void 0, function () {
     var decoded, newAccessToken;
     return __generator(this, function (_a) {
         decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         newAccessToken = (0, tokenUtils_1.generateAccessToken)({
-            id: decoded.id,
+            id: decoded.id, // number
             email: decoded.email,
             role: decoded.role,
         });

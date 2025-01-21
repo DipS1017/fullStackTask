@@ -3,10 +3,10 @@ import cors from "cors";
 import { authRoutes, userRoutes } from "./routes";
 import cookieParser from "cookie-parser";
 import { roleMiddleware, roles } from "./middleware/authMiddleware";
-
 import dotenv from "dotenv";
 import { errorHandler } from "./middleware/errorHandler";
-import mongoose from "mongoose";
+import prisma from "./db/prismaClient"; 
+
 dotenv.config();
 
 const app = express();
@@ -41,14 +41,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth", userRoutes);
 app.use(errorHandler);
 
-// MongoDB connection setup
+// Prisma connection setup
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI;
-    await mongoose.connect(mongoURI!);
-    console.log("MongoDB connected successfully");
+    // Prisma automatically manages the database connection
+    await prisma.$connect();
+    console.log("Postgres connected successfully");
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    console.error("Error connecting to Postgres:", error);
     process.exit(1);
   }
 };

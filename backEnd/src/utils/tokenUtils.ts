@@ -1,8 +1,9 @@
+
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
-//access token generation
+
+// Access token generation
 export const generateAccessToken = (user: {
-  id: string | Types.ObjectId;
+  id: number | string; // id type depends on your Prisma schema
   email: string;
   role: string;
 }) => {
@@ -11,12 +12,13 @@ export const generateAccessToken = (user: {
   });
 };
 
-//refresh token generation
+// Refresh token generation
 export const generateRefreshToken = (user: {
-  id: string | Types.ObjectId;
+  id: number | string; // id type depends on your Prisma schema
   email: string;
 }) => {
   return jwt.sign({ user }, process.env.JWT_REFRESH_SECRET!, {
     expiresIn: "7d",
   });
 };
+

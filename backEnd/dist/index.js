@@ -46,7 +46,7 @@ var cookie_parser_1 = __importDefault(require("cookie-parser"));
 var authMiddleware_1 = require("./middleware/authMiddleware");
 var dotenv_1 = __importDefault(require("dotenv"));
 var errorHandler_1 = require("./middleware/errorHandler");
-var mongoose_1 = __importDefault(require("mongoose"));
+var prismaClient_1 = __importDefault(require("./db/prismaClient"));
 dotenv_1.default.config();
 var app = (0, express_1.default)();
 // Log the value of FRONTEND_URL before using it in cors
@@ -70,22 +70,23 @@ app.get("/api/auth/me", (0, authMiddleware_1.roleMiddleware)("USER"), function (
 app.use("/api/auth", routes_1.authRoutes);
 app.use("/api/auth", routes_1.userRoutes);
 app.use(errorHandler_1.errorHandler);
-// MongoDB connection setup
+// Prisma connection setup
 var connectDB = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var mongoURI, error_1;
+    var error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                mongoURI = process.env.MONGO_URI;
-                return [4 /*yield*/, mongoose_1.default.connect(mongoURI)];
+                // Prisma automatically manages the database connection
+                return [4 /*yield*/, prismaClient_1.default.$connect()];
             case 1:
+                // Prisma automatically manages the database connection
                 _a.sent();
-                console.log("MongoDB connected successfully");
+                console.log("Postgres connected successfully");
                 return [3 /*break*/, 3];
             case 2:
                 error_1 = _a.sent();
-                console.error("Error connecting to MongoDB:", error_1);
+                console.error("Error connecting to Postgres:", error_1);
                 process.exit(1);
                 return [3 /*break*/, 3];
             case 3: return [2 /*return*/];

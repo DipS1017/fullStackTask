@@ -1,9 +1,11 @@
+
 import bcrypt from "bcrypt";
 import { NotFoundError, ValidationError } from "../utils/customError";
 import jwt from "jsonwebtoken";
 import { generateAccessToken, generateRefreshToken } from "../utils/tokenUtils";
-import User from "../models/User"; // Adjust the path to the User model
+import prisma from "../db/prismaClient"; // Import the Prisma client instance
 
+// Register a new user
 export const registerUser = async ({
   fullName,
   userName,
@@ -22,12 +24,16 @@ export const registerUser = async ({
   isActive?: boolean;
 }) => {
   // Check if user already exists by email or username
-  const existingUserByEmail = await User.findOne({ email });
+  const existingUserByEmail = await prisma.user.findUnique({
+    where: { email },
+  });
   if (existingUserByEmail) {
     throw new ValidationError("User with email already exists", "email");
   }
 
-  const existingUserByUsername = await User.findOne({ userName });
+  const existingUserByUsername = await prisma.user.findUnique({
+    where: { userName },
+  });
   if (existingUserByUsername) {
     throw new ValidationError("Username is taken", "userName");
   }
@@ -36,30 +42,36 @@ export const registerUser = async ({
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Create new user
-  const user = await User.create({
-    fullName,
-    userName,
-    email,
-    password: hashedPassword,
-    role,
-    isVerified,
-    isActive,
+  const user = await prisma.user.create({
+    data: {
+      fullName,
+      userName,
+      email,
+      password: hashedPassword,
+      role,
+      isVerified,
+      isActive,
+    },
   });
 
   return {
-    id: user._id,
+    id: user.id, // Prisma-generated id (number)
     fullName: user.fullName,
     userName: user.userName,
     email: user.email,
   };
 };
+
+// Authenticate the user (login)
 export const authenticateUser = async (
   emailOrUsername: string,
   password: string,
 ) => {
   // Check if user exists by email or username
-  const user = await User.findOne({
-    $or: [{ email: emailOrUsername }, { userName: emailOrUsername }],
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: emailOrUsername }, { userName: emailOrUsername }],
+    },
   });
 
   if (!user) {
@@ -73,21 +85,20 @@ export const authenticateUser = async (
   }
 
   // Generate tokens
-
   const accessToken = generateAccessToken({
-    id: user._id, // Convert ObjectId to string
+    id: user.id, // Prisma-generated id (number)
     email: user.email,
     role: user.role,
   });
 
   const refreshToken = generateRefreshToken({
-    id: user._id, // Convert ObjectId to string
+    id: user.id, // Use the Prisma-generated user ID (number)
     email: user.email,
   });
 
   return {
     user: {
-      id: user._id,
+      id: user.id, // Prisma-generated id (number)
       fullName: user.fullName,
       userName: user.userName,
       email: user.email,
@@ -96,17 +107,20 @@ export const authenticateUser = async (
     refreshToken,
   };
 };
+
+// Refresh access token using the refresh token
 export const refreshAccessTokenLogic = async (refreshToken: string) => {
   const decoded: any = jwt.verify(
     refreshToken,
-    process.env.JWT_REFRESH_SECRET!,
+    process.env.JWT_REFRESH_SECRET!
   );
 
   const newAccessToken = generateAccessToken({
-    id: decoded.id,
+    id: decoded.id, // number
     email: decoded.email,
     role: decoded.role,
   });
 
   return newAccessToken;
 };
+
